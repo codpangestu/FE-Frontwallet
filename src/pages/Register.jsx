@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { ChevronLeft, Mail, Lock, EyeOff, Eye, User, Facebook, Apple } from 'lucide-react';
+import { ChevronLeft, Mail, Lock, EyeOff, Eye, User } from 'lucide-react';
 import api from '../api';
+import { useAuth } from '../components/AuthContext';
 import '../App.css';
 
 export default function Register() {
@@ -14,48 +15,44 @@ export default function Register() {
     const [showPassword, setShowPassword] = useState(false);
     const [showPasswordConfirm, setShowPasswordConfirm] = useState(false);
 
+    const [fieldErrors, setFieldErrors] = useState({});
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
+
     const navigate = useNavigate();
+    const { login } = useAuth();
 
     const handleRegister = async (e) => {
         e.preventDefault();
         if (loading) return;
 
         if (password !== passwordConfirm) {
-            setError('Password confirmation does not match.');
+            setError('Konfirmasi password tidak cocok.');
             return;
         }
 
         setLoading(true);
         setError('');
+        setFieldErrors({});
 
         try {
             await api.post('/register', {
                 name,
-                username: username || name.toLowerCase().replace(/\s+/g, '_') + Math.floor(Math.random() * 1000), // auto generate if empty
+                username,
                 email,
                 phone_number: phoneNumber,
                 password
             });
 
             const loginResponse = await api.post('/login', { email, password });
-            localStorage.setItem('token', loginResponse.data.access_token);
-            localStorage.setItem('isAuthenticated', 'true');
-            localStorage.setItem('user', JSON.stringify(loginResponse.data.user));
-
+            login(loginResponse.data.user, loginResponse.data.access_token);
             navigate('/dashboard');
         } catch (err) {
             if (err.response && err.response.status === 422) {
-                const errors = err.response.data.errors;
-                if (errors) {
-                    const firstError = Object.values(errors)[0][0];
-                    setError(firstError);
-                } else {
-                    setError(err.response.data.message || 'Invalid data.');
-                }
+                setFieldErrors(err.response.data.errors || {});
+                setError(err.response.data.message || 'Data tidak valid.');
             } else {
-                setError('Registration failed. Please try again.');
+                setError('Pendaftaran gagal. Silakan coba lagi.');
             }
         } finally {
             setLoading(false);
@@ -98,7 +95,7 @@ export default function Register() {
                             <input
                                 id="name"
                                 type="text"
-                                className="w-full pl-12 pr-4 py-4.5 border border-slate-200 rounded-full bg-transparent text-slate-900 focus:border-[#d4af37] focus:ring-1 focus:ring-[#d4af37] outline-none transition-all placeholder:text-slate-400 font-medium"
+                                className={`w-full pl-12 pr-4 py-4.5 border rounded-full bg-transparent text-slate-900 focus:border-[#d4af37] focus:ring-1 focus:ring-[#d4af37] outline-none transition-all placeholder:text-slate-400 font-medium ${fieldErrors.name ? 'border-red-500' : 'border-slate-200'}`}
                                 placeholder="Micheal Breaks"
                                 value={name}
                                 onChange={(e) => setName(e.target.value)}
@@ -106,6 +103,46 @@ export default function Register() {
                                 required
                             />
                         </div>
+                        {fieldErrors.name && <p className="text-red-500 text-[10px] mt-1 ml-6">{fieldErrors.name[0]}</p>}
+                    </div>
+
+                    <div className="relative">
+                        <label htmlFor="username" className="absolute -top-2.5 left-6 bg-white px-2 text-[11px] font-semibold text-slate-500 z-10 tracking-wide">
+                            Username
+                        </label>
+                        <div className="relative flex items-center">
+                            <User className="absolute left-5 text-slate-400" size={20} strokeWidth={1.5} />
+                            <input
+                                id="username"
+                                type="text"
+                                className={`w-full pl-12 pr-4 py-4.5 border rounded-full bg-transparent text-slate-900 focus:border-[#d4af37] focus:ring-1 focus:ring-[#d4af37] outline-none transition-all placeholder:text-slate-400 font-medium ${fieldErrors.username ? 'border-red-500' : 'border-slate-200'}`}
+                                placeholder="micheal_09"
+                                value={username}
+                                onChange={(e) => setUsername(e.target.value)}
+                                disabled={loading}
+                                required
+                            />
+                        </div>
+                        {fieldErrors.username && <p className="text-red-500 text-[10px] mt-1 ml-6">{fieldErrors.username[0]}</p>}
+                    </div>
+
+                    <div className="relative">
+                        <label htmlFor="phoneNumber" className="absolute -top-2.5 left-6 bg-white px-2 text-[11px] font-semibold text-slate-500 z-10 tracking-wide">
+                            Phone Number
+                        </label>
+                        <div className="relative flex items-center">
+                            <User className="absolute left-5 text-slate-400" size={20} strokeWidth={1.5} />
+                            <input
+                                id="phoneNumber"
+                                type="tel"
+                                className={`w-full pl-12 pr-4 py-4.5 border rounded-full bg-transparent text-slate-900 focus:border-[#d4af37] focus:ring-1 focus:ring-[#d4af37] outline-none transition-all placeholder:text-slate-400 font-medium ${fieldErrors.phone_number ? 'border-red-500' : 'border-slate-200'}`}
+                                placeholder="08123456789"
+                                value={phoneNumber}
+                                onChange={(e) => setPhoneNumber(e.target.value)}
+                                disabled={loading}
+                            />
+                        </div>
+                        {fieldErrors.phone_number && <p className="text-red-500 text-[10px] mt-1 ml-6">{fieldErrors.phone_number[0]}</p>}
                     </div>
 
                     <div className="relative">
@@ -117,7 +154,7 @@ export default function Register() {
                             <input
                                 id="email"
                                 type="email"
-                                className="w-full pl-12 pr-4 py-4.5 border border-slate-200 rounded-full bg-transparent text-slate-900 focus:border-[#d4af37] focus:ring-1 focus:ring-[#d4af37] outline-none transition-all placeholder:text-slate-400 font-medium"
+                                className={`w-full pl-12 pr-4 py-4.5 border rounded-full bg-transparent text-slate-900 focus:border-[#d4af37] focus:ring-1 focus:ring-[#d4af37] outline-none transition-all placeholder:text-slate-400 font-medium ${fieldErrors.email ? 'border-red-500' : 'border-slate-200'}`}
                                 placeholder="micheal09@gmail.com"
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
@@ -125,6 +162,7 @@ export default function Register() {
                                 required
                             />
                         </div>
+                        {fieldErrors.email && <p className="text-red-500 text-[10px] mt-1 ml-6">{fieldErrors.email[0]}</p>}
                     </div>
 
                     <div className="relative">
@@ -136,7 +174,7 @@ export default function Register() {
                             <input
                                 id="password"
                                 type={showPassword ? "text" : "password"}
-                                className="w-full pl-12 pr-12 py-4.5 border border-slate-200 rounded-full bg-transparent text-slate-900 focus:border-[#d4af37] focus:ring-1 focus:ring-[#d4af37] outline-none transition-all placeholder:text-slate-400 font-medium"
+                                className={`w-full pl-12 pr-12 py-4.5 border rounded-full bg-transparent text-slate-900 focus:border-[#d4af37] focus:ring-1 focus:ring-[#d4af37] outline-none transition-all placeholder:text-slate-400 font-medium ${fieldErrors.password ? 'border-red-500' : 'border-slate-200'}`}
                                 placeholder="••••••••"
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
@@ -152,6 +190,7 @@ export default function Register() {
                                 {showPassword ? <Eye size={20} strokeWidth={1.5} /> : <EyeOff size={20} strokeWidth={1.5} />}
                             </button>
                         </div>
+                        {fieldErrors.password && <p className="text-red-500 text-[10px] mt-1 ml-6">{fieldErrors.password[0]}</p>}
                     </div>
 
                     <div className="relative mb-2">

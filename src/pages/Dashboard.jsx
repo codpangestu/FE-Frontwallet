@@ -6,13 +6,15 @@ import {
     FileText, Settings, ArrowLeft, Scan, BarChart2
 } from 'lucide-react';
 import api from '../api';
+import { useAuth } from '../components/AuthContext';
 
 export default function Dashboard() {
     const navigate = useNavigate();
+    const { user, setUser, logout } = useAuth();
+
     const [balance, setBalance] = useState(0);
     const [history, setHistory] = useState([]);
     const [loadingHistory, setLoadingHistory] = useState(false);
-    const [user, setUser] = useState(null);
 
     const [topupAmount, setTopupAmount] = useState('');
     const [transferAmount, setTransferAmount] = useState('');
@@ -28,25 +30,15 @@ export default function Dashboard() {
     const [profileForm, setProfileForm] = useState({ name: '', username: '', email: '', phone_number: '' });
     const [profileLoading, setProfileLoading] = useState(false);
 
-    // State untuk Pengguna Terakhir (Recent Transfers)
     const [recentTransfers, setRecentTransfers] = useState([]);
     const [loadingRecents, setLoadingRecents] = useState(false);
 
     useEffect(() => {
-        const isAuth = localStorage.getItem('isAuthenticated');
-        if (!isAuth) {
-            navigate('/login');
-            return;
+        if (user) {
+            fetchWalletData();
+            fetchTransactions();
         }
-
-        const userData = localStorage.getItem('user');
-        if (userData) {
-            setUser(JSON.parse(userData));
-        }
-
-        fetchWalletData();
-        fetchTransactions();
-    }, [navigate]);
+    }, [user]);
 
     const fetchWalletData = async () => {
         try {
@@ -54,9 +46,6 @@ export default function Dashboard() {
             setBalance(response.data.balance || 0);
         } catch (error) {
             console.error('Failed to fetch balance', error);
-            if (error.response && error.response.status === 401) {
-                handleLogout();
-            }
         }
     };
 
@@ -75,10 +64,7 @@ export default function Dashboard() {
     const fetchRecentTransfers = async () => {
         setLoadingRecents(true);
         try {
-            const token = localStorage.getItem('token');
-            const response = await api.get('/recent-transfers', {
-                headers: { Authorization: `Bearer ${token}` }
-            });
+            const response = await api.get('/recent-transfers');
             setRecentTransfers(response.data.recent_transfers);
         } catch (error) {
             console.error('Failed to fetch recent transfers', error);
@@ -86,7 +72,6 @@ export default function Dashboard() {
             setLoadingRecents(false);
         }
     };
-
 
     useEffect(() => {
         if (activeView === 'transfer') {
@@ -100,9 +85,7 @@ export default function Dashboard() {
         } catch (e) {
             console.error('Logout error', e);
         } finally {
-            localStorage.removeItem('token');
-            localStorage.removeItem('isAuthenticated');
-            localStorage.removeItem('user');
+            logout();
             navigate('/login');
         }
     };
@@ -128,7 +111,10 @@ export default function Dashboard() {
             fetchWalletData();
             fetchTransactions();
         } catch (error) {
-            showMessage(error.response?.data?.message || 'Top Up gagal', 'error');
+            const errorMsg = error.response?.data?.errors
+                ? Object.values(error.response.data.errors)[0][0]
+                : error.response?.data?.message || 'Top Up gagal';
+            showMessage(errorMsg, 'error');
         } finally {
             setActionLoading(false);
         }
@@ -140,8 +126,7 @@ export default function Dashboard() {
 
         const amount = parseInt(transferAmount);
         if (!transferTarget) return showMessage('Tujuan transfer tidak boleh kosong', 'error');
-        if (!amount || amount < 10000) return showMessage('Minimal nominal transfer adalah Rp 10.000', 'error');
-        if (amount > balance) return showMessage('Saldo tidak mencukupi', 'error');
+        if (!amount || amount < 1000) return showMessage('Minimal nominal transfer adalah Rp 1.000', 'error');
 
         setActionLoading(true);
         try {
@@ -158,7 +143,10 @@ export default function Dashboard() {
             fetchWalletData();
             fetchTransactions();
         } catch (error) {
-            showMessage(error.response?.data?.message || 'Transfer gagal', 'error');
+            const errorMsg = error.response?.data?.errors
+                ? Object.values(error.response.data.errors)[0][0]
+                : error.response?.data?.message || 'Transfer gagal';
+            showMessage(errorMsg, 'error');
         } finally {
             setActionLoading(false);
         }
@@ -189,7 +177,10 @@ export default function Dashboard() {
 
             setIsEditingProfile(false);
         } catch (error) {
-            showMessage(error.response?.data?.message || 'Gagal memperbarui profil', 'error');
+            const errorMsg = error.response?.data?.errors
+                ? Object.values(error.response.data.errors)[0][0]
+                : error.response?.data?.message || 'Gagal memperbarui profil';
+            showMessage(errorMsg, 'error');
         } finally {
             setProfileLoading(false);
         }
@@ -603,7 +594,7 @@ export default function Dashboard() {
 
                         <div className="p-6 flex-1">
                             <div className="bg-white rounded-3xl p-8 mb-6 shadow-[0_4px_20px_rgba(0,0,0,0.04)] text-center">
-                                <p className="text-[0.95rem] text-text-muted mb-2 font-semibold">Saldo Saat Ini</p>
+                                <p className="text-[0.95rem] text-slate-500 mb-2 font-semibold">Saldo Saat Ini</p>
                                 <h3 className="text-4xl m-0 text-slate-900 font-extrabold tracking-tight">{formatRupiah(balance)}</h3>
                             </div>
 
@@ -620,7 +611,7 @@ export default function Dashboard() {
                                         <span className="absolute left-5 top-1/2 -translate-y-1/2 font-extrabold text-secondary text-xl">Rp</span>
                                         <input
                                             type="number"
-                                            className="form-input pl-14 text-2xl font-extrabold h-16 rounded-2xl bg-slate-50 border border-slate-200 text-primary w-full transition-colors focus:border-secondary focus:ring-4 focus:ring-slate-100"
+                                            className="form-input pl-14 text-2xl font-extrabold h-16 rounded-2xl bg-slate-50 border border-slate-200 text-slate-800 w-full transition-colors focus:border-secondary focus:ring-4 focus:ring-slate-100"
                                             placeholder="0"
                                             value={topupAmount}
                                             onChange={(e) => setTopupAmount(e.target.value)}
@@ -628,7 +619,7 @@ export default function Dashboard() {
                                         />
                                     </div>
                                 </div>
-                                <button type="submit" className="btn btn-primary w-full p-4.5 text-lg rounded-2xl gold-gradient text-primary border-none font-extrabold shadow-[0_4px_15px_rgba(212,175,55,0.4)] transition-transform hover:scale-[1.02] disabled:opacity-70 disabled:hover:scale-100 disabled:cursor-not-allowed" disabled={actionLoading}>
+                                <button type="submit" className="btn btn-primary w-full p-4.5 text-lg rounded-2xl gold-gradient text-slate-900 border-none font-extrabold shadow-[0_4px_15px_rgba(212,175,55,0.4)] transition-transform hover:scale-[1.02] disabled:opacity-70 disabled:hover:scale-100 disabled:cursor-not-allowed" disabled={actionLoading}>
                                     {actionLoading ? 'Memproses...' : 'Konfirmasi Top Up'}
                                 </button>
                             </form>
@@ -651,8 +642,8 @@ export default function Dashboard() {
 
                         <div className="p-6 flex-1">
                             <div className="bg-white rounded-3xl p-6 mb-6 shadow-[0_4px_20px_rgba(0,0,0,0.04)] flex justify-between items-center">
-                                <p className="text-[0.95rem] text-text-muted m-0 font-semibold">Saldo Tunai</p>
-                                <h3 className="text-2xl m-0 text-primary font-extrabold tracking-tight">{formatRupiah(balance)}</h3>
+                                <p className="text-[0.95rem] text-slate-500 m-0 font-semibold">Saldo Tunai</p>
+                                <h3 className="text-2xl m-0 text-slate-900 font-extrabold tracking-tight">{formatRupiah(balance)}</h3>
                             </div>
 
                             {message.text && (
@@ -662,7 +653,7 @@ export default function Dashboard() {
                             )}
 
                             <form onSubmit={handleTransfer} className="bg-white rounded-3xl p-8 shadow-[0_4px_20px_rgba(0,0,0,0.04)]">
-                             
+
                                 <div className="mb-8">
                                     <h4 className="text-sm font-bold text-slate-900 mb-4 tracking-wide">Pernah Transfer Ke</h4>
                                     {loadingRecents ? (
@@ -700,7 +691,7 @@ export default function Dashboard() {
                                     <label className="form-label font-bold text-slate-900 mb-3 block">Tujuan Transfer</label>
                                     <input
                                         type="text"
-                                        className="form-input w-full rounded-2xl bg-slate-50 border border-slate-200 p-4 font-medium transition-colors focus:border-secondary focus:ring-4 focus:ring-slate-100"
+                                        className="form-input w-full rounded-2xl bg-slate-50 border border-slate-200 p-4 font-medium text-slate-800 transition-colors focus:border-secondary focus:ring-4 focus:ring-slate-100"
                                         placeholder="Email atau No. HP Penerima"
                                         value={transferTarget}
                                         onChange={(e) => setTransferTarget(e.target.value)}
@@ -714,7 +705,7 @@ export default function Dashboard() {
                                         <span className="absolute left-4 top-1/2 -translate-y-1/2 font-extrabold text-secondary text-lg">Rp</span>
                                         <input
                                             type="number"
-                                            className="form-input pl-12 text-xl font-bold rounded-2xl bg-slate-50 border border-slate-200 h-14 text-primary w-full transition-colors focus:border-secondary focus:ring-4 focus:ring-slate-100"
+                                            className="form-input pl-12 text-xl font-bold rounded-2xl bg-slate-50 border border-slate-200 h-14 text-slate-800 w-full transition-colors focus:border-secondary focus:ring-4 focus:ring-slate-100"
                                             placeholder="0"
                                             value={transferAmount}
                                             onChange={(e) => setTransferAmount(e.target.value)}
@@ -727,7 +718,7 @@ export default function Dashboard() {
                                     <label className="form-label font-bold text-slate-900 mb-3 block">Catatan</label>
                                     <input
                                         type="text"
-                                        className="form-input w-full rounded-2xl bg-slate-50 border border-slate-200 p-4 font-medium text-primary transition-colors focus:border-secondary focus:ring-4 focus:ring-slate-100"
+                                        className="form-input w-full rounded-2xl bg-slate-50 border border-slate-200 p-4 font-medium text-slate-800 transition-colors focus:border-secondary focus:ring-4 focus:ring-slate-100"
                                         placeholder="Cth: Bayar hutang (Opsional)"
                                         value={transferRef}
                                         onChange={(e) => setTransferRef(e.target.value)}
@@ -735,7 +726,7 @@ export default function Dashboard() {
                                     />
                                 </div>
 
-                                <button type="submit" className="btn btn-primary w-full p-4.5 text-lg rounded-2xl gold-gradient text-primary border-none font-extrabold shadow-[0_4px_15px_rgba(212,175,55,0.4)] transition-transform hover:scale-[1.02] disabled:opacity-70 disabled:hover:scale-100 disabled:cursor-not-allowed" disabled={actionLoading}>
+                                <button type="submit" className="btn btn-primary w-full p-4.5 text-lg rounded-2xl gold-gradient text-slate-900 border-none font-extrabold shadow-[0_4px_15px_rgba(212,175,55,0.4)] transition-transform hover:scale-[1.02] disabled:opacity-70 disabled:hover:scale-100 disabled:cursor-not-allowed" disabled={actionLoading}>
                                     {actionLoading ? 'Memproses...' : 'Kirim Dana Sekarang'}
                                 </button>
                             </form>

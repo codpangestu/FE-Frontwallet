@@ -1,42 +1,41 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Mail, Lock, EyeOff, Eye, Facebook, Apple } from 'lucide-react';
+import { Mail, Lock, EyeOff, Eye } from 'lucide-react';
 import api from '../api';
+import { useAuth } from '../components/AuthContext';
 import '../App.css';
 
 export default function Login() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
+    const [fieldErrors, setFieldErrors] = useState({});
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
+
     const navigate = useNavigate();
+    const { login } = useAuth();
 
     const handleLogin = async (e) => {
         e.preventDefault();
         if (loading) return;
 
-        if (!email || !password) {
-            setError('Please fill in email and password.');
-            return;
-        }
-
         setLoading(true);
         setError('');
+        setFieldErrors({});
 
         try {
             const response = await api.post('/login', { email, password });
-
-            localStorage.setItem('token', response.data.access_token);
-            localStorage.setItem('isAuthenticated', 'true');
-            localStorage.setItem('user', JSON.stringify(response.data.user));
-
+            login(response.data.user, response.data.access_token);
             navigate('/dashboard');
         } catch (err) {
-            if (err.response && (err.response.status === 401 || err.response.status === 422)) {
-                setError(err.response.data.message || err.response.data.errors?.email?.[0] || 'Incorrect email or password.');
+            if (err.response && err.response.status === 422) {
+                setFieldErrors(err.response.data.errors || {});
+                setError(err.response.data.message || 'Validation failed.');
+            } else if (err.response && err.response.status === 401) {
+                setError('Email atau password salah.');
             } else {
-                setError('Server error occurred. Make sure backend is running.');
+                setError('Koneksi ke server gagal. Pastikan backend berjalan.');
             }
         } finally {
             setLoading(false);
@@ -74,7 +73,7 @@ export default function Login() {
                             <input
                                 id="email"
                                 type="email"
-                                className="w-full pl-12 pr-4 py-4.5 border border-slate-200 rounded-full bg-transparent text-slate-900 focus:border-[#d4af37] focus:ring-1 focus:ring-[#d4af37] outline-none transition-all placeholder:text-slate-400 font-medium"
+                                className={`w-full pl-12 pr-4 py-4.5 border rounded-full bg-transparent text-slate-900 focus:border-[#d4af37] focus:ring-1 focus:ring-[#d4af37] outline-none transition-all placeholder:text-slate-400 font-medium ${fieldErrors.email ? 'border-red-500' : 'border-slate-200'}`}
                                 placeholder="micheal09@gmail.com"
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
@@ -82,6 +81,7 @@ export default function Login() {
                                 required
                             />
                         </div>
+                        {fieldErrors.email && <p className="text-red-500 text-[10px] mt-1 ml-6">{fieldErrors.email[0]}</p>}
                     </div>
 
                     <div className="relative mb-5">
@@ -93,7 +93,7 @@ export default function Login() {
                             <input
                                 id="password"
                                 type={showPassword ? "text" : "password"}
-                                className="w-full pl-12 pr-12 py-4.5 border border-slate-200 rounded-full bg-transparent text-slate-900 focus:border-[#d4af37] focus:ring-1 focus:ring-[#d4af37] outline-none transition-all placeholder:text-slate-400 font-medium"
+                                className={`w-full pl-12 pr-12 py-4.5 border rounded-full bg-transparent text-slate-900 focus:border-[#d4af37] focus:ring-1 focus:ring-[#d4af37] outline-none transition-all placeholder:text-slate-400 font-medium ${fieldErrors.password ? 'border-red-500' : 'border-slate-200'}`}
                                 placeholder="••••••••"
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
@@ -108,6 +108,7 @@ export default function Login() {
                                 {showPassword ? <Eye size={20} strokeWidth={1.5} /> : <EyeOff size={20} strokeWidth={1.5} />}
                             </button>
                         </div>
+                        {fieldErrors.password && <p className="text-red-500 text-[10px] mt-1 ml-6">{fieldErrors.password[0]}</p>}
                     </div>
 
                     <div className="flex justify-between items-center mb-8 px-2">

@@ -53,11 +53,12 @@ React (Vite) + Tailwind CSS v4 • Last Updated: March 2026
 1.  User login/register via `/login` atau `/register`.
 2.  Backend mengirimkan **Bearer Token**, profil user, dan data saldo.
 3.  Token disimpan di `localStorage` dan status `isAuthenticated` menjadi `true`.
-4.  **Axios Interceptor** ([src/api.js](cci:7://file:///e:/FULLSTACK%20JOURNEY/Assigment/workday/frontwallet/src/api.js:0:0-0:0)) secara otomatis menyisipkan token ke setiap header request API berikutnya.
+4.  **Axios Interceptor** (`src/api.js`) secara otomatis menyisipkan token ke setiap header request API berikutnya.
 
 ---
 
 ## 📂 Routing Structure
+```text
 src/
 ├── pages/
 │   ├── Home.jsx        (Onboarding)
@@ -69,6 +70,7 @@ src/
 │   └── api.js          (Axios Configuration)
 ├── App.jsx             (Routes & State context)
 └── main.jsx            (Entry point)
+```
 
 ---
 
@@ -101,7 +103,7 @@ src/
 ## 📐 Component Architecture
 *   **Sub-view Pattern**: `Dashboard.jsx` menggunakan sistem `activeView` untuk merender komponen internal (Home, Statistic, Scan, etc) secara dinamis tanpa reload halaman.
 *   **Modern Inputs**: Komponen input menggunakan kombinasi `absolute labels` untuk estetika floating teks di atas border.
-*   **Interceptor Pattern**: Memastikan keamanan setiap request secara terpusat di [api.js](cci:7://file:///e:/FULLSTACK%20JOURNEY/Assigment/workday/frontwallet/src/api.js:0:0-0:0).
+*   **Interceptor Pattern**: Memastikan keamanan setiap request secara terpusat di `api.js`.
 
 ---
 
@@ -119,7 +121,6 @@ src/
 ---
 
 ## 🚀 Getting Started
-
 1.  **Clone & Install**:
     ```bash
     git clone https://github.com/codpangestu/FE-Frontwallet.git
