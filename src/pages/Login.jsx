@@ -45,12 +45,12 @@ export default function Login() {
     return (
         <div className="app-container page-transition bg-slate-100 flex flex-col min-h-screen">
 
-            {/* Top Logo */}
+            
             <div className="pt-14 pb-8 flex justify-center items-center">
                 <h1 className="text-xl font-medium text-slate-800 tracking-wide">Mini Wallet</h1>
             </div>
 
-            {/* Main Content Card */}
+            
             <div className="flex-1 bg-white rounded-t-[2.5rem] px-8 pt-10 pb-8 flex flex-col shadow-sm relative z-20">
                 <div className="text-center mb-8 pb-2">
                     <h2 className="text-[1.7rem] font-semibold text-slate-900 mb-1 leading-tight tracking-tight">Welcome to Mini Wallet</h2>

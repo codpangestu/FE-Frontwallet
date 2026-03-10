@@ -9,27 +9,27 @@ export default function Home() {
             <div className="flex-1 flex flex-col items-center justify-center relative pt-12 pb-8">
 
                 <div className="relative flex flex-col items-center mt-12 mb-8">
-                    {/* Sparkles Top Left */}
+                    
                     <div className="absolute -top-12 -left-6 text-[#d4af37] opacity-90">
                         <Sparkles size={36} strokeWidth={1.5} />
                     </div>
 
-                    {/* Dark Blue Smartphone Card */}
+                   
                     <div className="bg-[#0f172a] w-36 h-36 rounded-[2.5rem] flex items-center justify-center relative z-20 shadow-2xl">
                         <Smartphone size={72} className="text-white" strokeWidth={1.5} />
                     </div>
 
-                    {/* Gold Credit Card Overlay */}
+                    
                     <div className="absolute -bottom-6 -right-8 z-30 bg-[#d4af37] w-24 h-24 rounded-2xl flex items-center justify-center shadow-xl rotate-12">
                         <CreditCard size={44} className="text-white" strokeWidth={1.5} />
                     </div>
 
-                    {/* Gold Coins Top Left */}
+                    
                     <div className="absolute -top-4 -left-10 z-10 bg-[#f59e0b] w-14 h-14 rounded-full flex items-center justify-center shadow-lg -rotate-[20deg]">
                         <Coins size={32} className="text-white" strokeWidth={2} />
                     </div>
 
-                    {/* Gold Coins Bottom Right (small) */}
+                    
                     <div className="absolute -bottom-10 right-14 z-10 bg-[#f59e0b] w-12 h-12 rounded-full flex items-center justify-center shadow-lg rotate-[25deg]">
                         <Coins size={26} className="text-white" strokeWidth={2} />
                     </div>

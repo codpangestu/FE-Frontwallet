@@ -62,7 +62,7 @@ export default function Register() {
     return (
         <div className="app-container page-transition bg-slate-100 flex flex-col min-h-screen">
 
-            {/* Top Logo and Back Button */}
+            
             <div className="pt-14 pb-8 px-6 flex items-center justify-between relative">
                 <Link to="/login" className="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-sm text-slate-800 hover:bg-slate-50 transition-colors z-10 absolute left-6">
                     <ChevronLeft size={22} strokeWidth={2.5} />
@@ -72,7 +72,7 @@ export default function Register() {
                 </div>
             </div>
 
-            {/* Main Content Card */}
+            
             <div className="flex-1 bg-white rounded-t-[2.5rem] px-8 pt-10 pb-8 flex flex-col shadow-sm relative z-20 overflow-hidden">
                 <div className="text-center mb-8 pb-2">
                     <h2 className="text-[1.7rem] font-semibold text-slate-900 leading-tight tracking-tight">Create an Account?</h2>

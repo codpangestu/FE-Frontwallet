@@ -43,7 +43,7 @@ export const useAuth = () => useContext(AuthContext);
 export const ProtectedRoute = ({ children }) => {
     const { user, loading } = useAuth();
 
-    if (loading) return null; // Or a loading spinner
+    if (loading) return null; 
 
     if (!user) {
         return <Navigate to="/login" replace />;
